@@ -288,3 +288,9 @@
   (load-dynamic-publisher
     "com.brunobonacci.mulog.publishers.slack/slack-publisher"
     config))
+
+(defmethod publisher-factory :advanced-console
+  [config]
+  (load-dynamic-publisher
+   "com.brunobonacci.mulog.publishers.advanced-console/advanced-console-publisher"
+   config))
