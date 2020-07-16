@@ -28,8 +28,12 @@
   
   (publish [_ buffer]
     (doseq [item (map second (rb/items buffer))
-            :let [colorized-item (colorize-item item)]]
-      (printf "%s\n" (ut/edn-str colorized-item))
+            :let [formatter (config :format)]]
+      (cond 
+        (= formatter :default-formatter) 
+        (println  (colorize-item item))
+        
+        :default (println item))
       (flush))
     (rb/clear buffer)))
 
