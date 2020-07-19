@@ -1,16 +1,22 @@
 (ns advanced-console-test
-  (:require [com.brunobonacci.mulog :as mu]))
+  (:require [com.brunobonacci.mulog :as mu]
+            [where.core :refer [where]]))
 
+(def formatting 
+  [(where [:mulog/event-name = :green-test])
+   :red-green
+
+   (where [:mulog/event-name = :blue-test])
+   :blue-yellow])
 ;; starting the publisher
 (def publishers (mu/start-publisher!
-                      {:type :multi
-                       :publishers
-                       [{:type :advanced-console 
-                         :format :default-formatter}
-                        {:type :advanced-console}]}))
+                   {:type :advanced-console
+                    :format formatting}))
 
 ;;printing with ansi and overriding default values
-(mu/log :test :pairs-test "pairs of color")
+(do
+  (mu/log :green-test :pairs-test "pairs of color")
+  (mu/log :blue-test :pairs-test "pairs of color"))
 
 ;; (publishers)
 

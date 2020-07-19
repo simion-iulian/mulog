@@ -291,6 +291,7 @@
 
 (defmethod publisher-factory :advanced-console
   [config]
+  {:pre [(even? (count (:format config)))]}
   (load-dynamic-publisher
    "com.brunobonacci.mulog.publishers.advanced-console/advanced-console-publisher"
    config))
