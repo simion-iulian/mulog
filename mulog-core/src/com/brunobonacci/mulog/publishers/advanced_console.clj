@@ -1,18 +1,6 @@
  (ns com.brunobonacci.mulog.publishers.advanced-console
    (:require [com.brunobonacci.mulog.buffer :as rb]
-             [where.core :refer [where]]
              [clansi.core :as ansi]))
-
-
-(def users 
-  [{:id 12
-    :name "klk"}
-   {:id 13
-    :name "ilk"}
-   {:id 14
-    :name "elk"}])
-
-(filter (where :id > 12) users)
 
 (defn ansi-color
   [value color]
@@ -31,17 +19,39 @@
   {:keys-color :green
    :vals-color :red})
 
+(def magenta-cyan
+  {:keys-color :magenta
+   :vals-color :cyan})
+
 (def blue-yellow
   {:keys-color :yellow
    :vals-color :blue})
 
 (def formatters 
   {:red-green green-red
-   :blue-yellow blue-yellow})
+   :blue-yellow blue-yellow
+   :magenta-cyan magenta-cyan})
+
+(defn match-formatter
+  [matcher formatter]
+  (fn [item]
+    (when (matcher item)
+      formatter)))
+
+(defn find-matching-formatter
+  [matchers-formatters item]
+  (let [prepared-matchers (->> matchers-formatters
+                               (drop-last 2)
+                               (partition 2))
+        find-formatter (->> prepared-matchers
+                            (map (partial apply match-formatter))
+                            (apply some-fn))]
+    (if-let [formatter (find-formatter item)]
+      formatter
+      (:default-formatter (apply hash-map (take-last 2 matchers-formatters))))))
 
 (deftype AdvancedConsolePublisher
-         [config buffer]
-
+  [config buffer]
   com.brunobonacci.mulog.publisher.PPublisher
   (agent-buffer [_]
     buffer)
@@ -50,14 +60,13 @@
     200)
 
   (publish [_ buffer]
-           (let [matchers-formatters (->> (:format config)
-                                          (partition 2))]
-             (doseq [item (map second (rb/items buffer))]
-               (doseq [[m f] matchers-formatters]
-                 (when (m item)
-                   (println (colorize item (f formatters)))))))
-           (flush)
-           (rb/clear buffer)))
+    (doseq [item (map second (rb/items buffer))
+            :let [fmt (-> (:format config)
+                          (find-matching-formatter item)
+                          formatters)]]
+      (println (colorize item fmt)))
+    (flush)
+    (rb/clear buffer)))
 
 (defn advanced-console-publisher
   [config]
