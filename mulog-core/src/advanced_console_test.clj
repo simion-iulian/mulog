@@ -7,16 +7,18 @@
    :red-green
 
    (where [:mulog/event-name = :blue-test])
-   :blue-yellow])
-;; starting the publisher
+   :blue-yellow
+   
+   :default-formatter :magenta-cyan])
 (def publishers (mu/start-publisher!
                    {:type :advanced-console
                     :format formatting}))
 
-;;printing with ansi and overriding default values
 (do
   (mu/log :green-test :pairs-test "pairs of color")
-  (mu/log :blue-test :pairs-test "pairs of color"))
+  (mu/log :blue-test :pairs-test "pairs of color")
+  (mu/log :default-test :pairs-test "pairs of color"))
+
 
 ;; (publishers)
 
