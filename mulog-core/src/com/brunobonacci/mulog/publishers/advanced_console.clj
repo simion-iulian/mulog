@@ -15,22 +15,12 @@
         colorized-item (zipmap colorized-keys colorized-vals)]
     colorized-item))
 
-(def green-red
-  {:keys-color :green
-   :vals-color :red})
+(def formatters
+  (atom {}))
 
-(def magenta-cyan
-  {:keys-color :magenta
-   :vals-color :cyan})
-
-(def blue-yellow
-  {:keys-color :yellow
-   :vals-color :blue})
-
-(def formatters 
-  {:red-green green-red
-   :blue-yellow blue-yellow
-   :magenta-cyan magenta-cyan})
+(defn register-formatters
+  [formatter-config]
+  (reset! formatters formatter-config))
 
 (defn match-formatter
   [matcher formatter]
@@ -50,8 +40,10 @@
       formatter
       (:default-formatter (apply hash-map (take-last 2 matchers-formatters))))))
 
+;; I want to add another formatter 
+
 (deftype AdvancedConsolePublisher
-  [config buffer]
+         [config buffer]
   com.brunobonacci.mulog.publisher.PPublisher
   (agent-buffer [_]
     buffer)
@@ -61,10 +53,11 @@
 
   (publish [_ buffer]
     (doseq [item (map second (rb/items buffer))
-            :let [fmt (-> (:format config)
-                          (find-matching-formatter item)
-                          formatters)]]
-      (println (colorize item fmt)))
+            :let [formatter (-> (:format config)
+                          (find-matching-formatter item))]]
+      (if-let [colors (formatter @formatters)]
+        (println (colorize item colors))
+        (println item)))
     (flush)
     (rb/clear buffer)))
 

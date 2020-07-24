@@ -1,6 +1,7 @@
 (ns advanced-console-test
   (:require [com.brunobonacci.mulog :as mu]
-            [where.core :refer [where]]))
+            [where.core :refer [where]]
+            [com.brunobonacci.mulog.publishers.advanced-console :refer [register-formatters]]))
 
 (def formatting 
   [(where [:mulog/event-name = :green-test])
@@ -10,6 +11,14 @@
    :blue-yellow
    
    :default-formatter :magenta-cyan])
+
+(register-formatters {:red-green    {:keys-color :green
+                                     :vals-color :red}
+                      :blue-yellow  {:keys-color :magenta
+                                     :vals-color :cyan}
+                      :magenta-cyan {:keys-color :yellow
+                                     :vals-color :blue}})
+
 (def publishers (mu/start-publisher!
                    {:type :advanced-console
                     :format formatting}))
@@ -19,7 +28,7 @@
   (mu/log :blue-test :pairs-test "pairs of color")
   (mu/log :default-test :pairs-test "pairs of color"))
 
-
-;; (publishers)
+; (mu/log :http-test :http-error 404)
+; (publishers)
 
 ;; the log function seems to use pr internally
