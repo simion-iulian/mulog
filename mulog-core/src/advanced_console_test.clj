@@ -4,38 +4,22 @@
             [com.brunobonacci.mulog.publishers.advanced-console :refer [register-formatters]]))
 
 (def formatting 
-  [(where [:mulog/event-name = :green-test])
-   :red-green
+  [(where :mulog/event-name :is? :line-test)
+   :line-test-event
 
-   (where [:mulog/event-name = :blue-test])
-   :blue-yellow
-   
-   (where [:mulog/event-name = :http-test])
-   :yellow-cyan
-   
-   :default-formatter :magenta-cyan])
+   (where :mulog/event-name :is :http-test)
+   :another-line-event
 
-;; example formats
-(def pair-format
-  {:type :pairs
-   :red-green [:red :green]})
+   (where contains? :http-error)
+   :http-error-coloring
 
-(def entry-format
-  {:type :entry
-   :http-error [:yellow :blue]})
+   :default-formatter :magenta-red])
 
-(def event-format
-  {:type :event
-   :event-test :magenta})
-
-(register-formatters {:red-green    {:keys-color :green
-                                     :vals-color :red}
-                      :blue-yellow  {:keys-color :magenta
-                                     :vals-color :cyan}
-                      :magenta-cyan {:keys-color :yellow
-                                     :vals-color :blue}
-                      :yellow-cyan {:keys-color :yellow
-                                    :vals-color :cyan}})
+(register-formatters {:line-test-event    {:event :green}
+                      :another-line-event  {:event :yellow}
+                      :http-error-coloring   {:entry [:cyan :underline]}
+                      :magenta-red  {:entry {:key :magenta
+                                             :value :red}}})
 
 (def publishers (mu/start-publisher!
                    {:type :advanced-console
@@ -47,6 +31,7 @@
   (mu/log :default-test :pairs-test "pairs of color"))
 
 (mu/log :http-test :http-error 404)
-;;  (publishers)
+
+; (publishers)
 
 ;; the log function seems to use pr internally
