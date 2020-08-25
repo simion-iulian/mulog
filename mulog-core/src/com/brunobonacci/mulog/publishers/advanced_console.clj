@@ -1,6 +1,7 @@
  (ns com.brunobonacci.mulog.publishers.advanced-console
    (:require [com.brunobonacci.mulog.buffer :as rb]
-             [clansi.core :as ansi]))
+             [clansi.core :as ansi]
+             ))
 
 (defn ansi-color
   [value color]
@@ -9,11 +10,8 @@
        (map #(ansi/style % color))))
 
 (defn colorize
-  [item config]
-  (let [colorized-keys (ansi-color (keys item) (config :keys-color))
-        colorized-vals (ansi-color (vals item) (config :vals-color))
-        colorized-item (zipmap colorized-keys colorized-vals)]
-    colorized-item))
+  [item color]
+  (ansi-color item color))
 
 (def formatters
   (atom {}))
@@ -22,23 +20,29 @@
   [formatter-config]
   (reset! formatters formatter-config))
 
-(defn match-formatter
-  [matcher formatter]
-  (fn [item]
-    (when (matcher item)
-      formatter)))
+(defn match-formatters [entry rules]
+  (->> rules
+       (partition 2)
+       (map
+        (fn [[match? fmt]]
+          (when (match? (apply hash-map entry))
+            (let [rule-fmt (-> fmt vals first)
+                  rule-key (-> fmt keys first)
+                  formatter (@formatters rule-fmt)
+                  colorized-pairs (if (rule-fmt contains? :pair)
+                                    (colorize entry (:pair formatter))
+                                    entry)]
+              (apply hash-map colorized-pairs)))))
+       (into {})))
 
-(defn find-matching-formatter
-  [matchers-formatters item]
-  (let [prepared-matchers (->> matchers-formatters
-                               (drop-last 2)
-                               (partition 2))
-        find-formatter (->> prepared-matchers
-                            (map (partial apply match-formatter))
-                            (apply some-fn))]
-    (if-let [formatter (find-formatter item)]
-      formatter
-      (:default-formatter (apply hash-map (take-last 2 matchers-formatters))))))
+(defn collect-formatting-matchers
+  [rules item]
+  (->> item
+       (mapcat
+        (fn [entry]
+          (match-formatters entry rules)))
+       (remove nil?)
+       ))
 
 ;; I want to add another formatter 
 
@@ -53,11 +57,14 @@
 
   (publish [_ buffer]
     (doseq [item (map second (rb/items buffer))
-            :let [formatter (-> (:format config)
-                          (find-matching-formatter item))]]
-      (if-let [colors (formatter @formatters)]
+            :let [matching-formatters (-> (:format config)
+                                          (collect-formatting-matchers item))]]
+      (println "got formatters: " matching-formatters)
+      #_(if-let [colors (matching-formatters @formatters)]
         (println (colorize item colors))
-        (println item)))
+        (println item))
+      ;; (println)
+      )
     (flush)
     (rb/clear buffer)))
 
