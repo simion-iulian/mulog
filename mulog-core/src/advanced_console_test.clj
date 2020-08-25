@@ -2,6 +2,10 @@
   (:require [com.brunobonacci.mulog :as mu]
             [where.core :refer [where]]
             [com.brunobonacci.mulog.publishers.advanced-console :as advanced-console]))
+<<<<<<< HEAD
+=======
+
+>>>>>>> bad803c... pair coloring partially working
 (def format-rules
   [(where :mulog/event-name :is? :line-test)
    {:line-test :event-format}
@@ -10,13 +14,23 @@
    {:http-test :http-format}
 
    (where contains? :http-error)
+<<<<<<< HEAD
    {:http-error :http-error-format}])
+=======
+   {:http-error :http-error-format}
+
+   :default-formatter {:event :magenta}])
+>>>>>>> bad803c... pair coloring partially working
 
 (advanced-console/register-formatters
  {:event-format      {:event :green}
   :http-format       {:event :yellow}
+<<<<<<< HEAD
   :http-error-format {:pair :cyan}
   :default-formatter {:event :magenta}})
+=======
+  :http-error-format {:pair :cyan}})
+>>>>>>> bad803c... pair coloring partially working
 
 (def publishers
   (mu/start-publisher!
