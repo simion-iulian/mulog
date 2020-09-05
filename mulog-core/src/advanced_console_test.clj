@@ -13,7 +13,7 @@
    (where contains? :http-error)
    {:http-error :http-error-format}
 
-   :default-formatter {:event :magenta}])
+   :default-formatter [:magenta :underline]])
 
 (advanced-console/register-formatters
  {:event-format      {:event :green}
@@ -25,7 +25,7 @@
                  {:type :advanced-console
                   :format format-rules}))
 
-#_(do
+(do
   (mu/log :line-test :whole-line-test "whole line should be colored")
   (mu/log :http-test :whole-line-but-different "whole line should be colored but in a different way")
   (mu/log :default-test :defaults "this should use the default"))
