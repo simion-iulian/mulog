@@ -40,13 +40,10 @@
         (fn [[match? fmt]]
           (when (match? (apply hash-map entry))
             (let [rule-fmt (-> fmt vals first)
-                  rule-key (-> fmt keys first)
-                  formatter (@formatters rule-fmt)
-                  colorized-pairs (if (rule-fmt contains? :pair)
-                                    (colorize entry (:pair formatter))
-                                    entry)]
-              (apply hash-map colorized-pairs)))))
-       (into {})))
+                  {:keys [pair event]
+                   :or   {event (:default-formatter formatters)}}
+                  (@formatters rule-fmt)]
+              (apply hash-map (colorize entry (or pair event)))))))))
 
 (defn collect-formatting-matchers
   [rules item]
@@ -55,6 +52,7 @@
         (fn [entry]
           (match-formatters entry rules)))
        (remove nil?)
+       (apply conj)
        ))
 
 (defn entry-format
@@ -83,12 +81,7 @@
     (doseq [item (map second (rb/items buffer))
             :let [matching-formatters (-> (:format config)
                                           (collect-formatting-matchers item))]]
-      (println "got formatters: " matching-formatters)
-      #_(if-let [colors (matching-formatters @formatters)]
-        (println (colorize item colors))
-        (println item))
-      ;; (println)
-      )
+      (println "got formatters: " matching-formatters))
     (flush)
     (rb/clear buffer)))
 
