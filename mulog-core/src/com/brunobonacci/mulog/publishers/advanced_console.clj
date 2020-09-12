@@ -6,14 +6,12 @@
   [value color]
   (->> value
        (map str)
-       (map #(ansi/style % color))))
+       (map #(ansi/style % color))
+       ))
 
 (defn colorize
-  [item config]
-  (let [colorized-keys (ansi-color (keys item) (config :keys-color))
-        colorized-vals (ansi-color (vals item) (config :vals-color))
-        colorized-item (zipmap colorized-keys colorized-vals)]
-    colorized-item))
+  [item color]
+  (ansi-color item color))
 
 (def formatters
   (atom {}))
@@ -22,25 +20,31 @@
   [formatter-config]
   (reset! formatters formatter-config))
 
-(defn match-formatter
-  [matcher formatter]
-  (fn [item]
-    (when (matcher item)
-      formatter)))
+(defn find-format
+  [rules [key val]]
+  (->> rules
+       (partition 2)
+       (keep
+        (fn [[match? fmt]]
+          (when (match? (hash-map key val))
+            fmt)))))
 
-(defn find-matching-formatter
-  [matchers-formatters item]
-  (let [prepared-matchers (->> matchers-formatters
-                               (drop-last 2)
-                               (partition 2))
-        find-formatter (->> prepared-matchers
-                            (map (partial apply match-formatter))
-                            (apply some-fn))]
-    (if-let [formatter (find-formatter item)]
-      formatter
-      (:default-formatter (apply hash-map (take-last 2 matchers-formatters))))))
+(defn find-all-formats 
+  [rules entry]
+  (mapcat (partial find-format rules) entry))
 
-;; I want to add another formatter 
+(defn entry-format
+  [entry rules]
+  (->> entry
+       (find-all-formats rules)
+       (keep
+        (fn [fmt]
+          (let [rule-extractor (-> fmt vals first)
+                rule-fmt (@formatters rule-extractor)]
+            (:event rule-fmt))))
+       (into [])
+       (cons (get-in @formatters [:default-formatter :event]))
+       last))
 
 (deftype AdvancedConsolePublisher
          [config buffer]
@@ -53,11 +57,9 @@
 
   (publish [_ buffer]
     (doseq [item (map second (rb/items buffer))
-            :let [formatter (-> (:format config)
-                          (find-matching-formatter item))]]
-      (if-let [colors (formatter @formatters)]
-        (println (colorize item colors))
-        (println item)))
+            :let [rules (:format config)
+                  event-fmt (entry-format item rules)]]
+      (println (apply conj (colorize item event-fmt))))
     (flush)
     (rb/clear buffer)))
 
