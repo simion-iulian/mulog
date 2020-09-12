@@ -1,37 +1,38 @@
 (ns advanced-console-test
   (:require [com.brunobonacci.mulog :as mu]
             [where.core :refer [where]]
-            [com.brunobonacci.mulog.publishers.advanced-console :refer [register-formatters]]))
-
-(def formatting 
+            [com.brunobonacci.mulog.publishers.advanced-console :as advanced-console]))
+(def format-rules
   [(where :mulog/event-name :is? :line-test)
-   :line-test-event
+   {:line-test :event-format}
 
-   (where :mulog/event-name :is :http-test)
-   :another-line-event
+   (where :mulog/event-name :is? :http-test)
+   {:http-test :http-format}
 
    (where contains? :http-error)
-   :http-error-coloring
+   {:http-error :http-error-format}])
 
-   :default-formatter :magenta-red])
+(advanced-console/register-formatters
+ {:event-format      {:event :green}
+  :http-format       {:event :yellow}
+  :http-error-format {:pair :cyan}
+  :default-formatter {:event :magenta}})
 
-(register-formatters {:line-test-event    {:event :green}
-                      :another-line-event  {:event :yellow}
-                      :http-error-coloring   {:entry [:cyan :underline]}
-                      :magenta-red  {:entry {:key :magenta
-                                             :value :red}}})
+(def publishers
+  (mu/start-publisher!
+                 {:type :advanced-console
+                  :format format-rules}))
 
-(def publishers (mu/start-publisher!
-                   {:type :advanced-console
-                    :format formatting}))
+#_(do
+  (mu/log :line-test :whole-line-test "whole line should be colored")
+  (mu/log :http-test :whole-line-but-different "whole line should be colored but in a different way")
+  (mu/log :default-test :defaults "this should use the default"))
 
-(do
-  (mu/log :green-test :pairs-test "pairs of color")
-  (mu/log :blue-test :pairs-test "pairs of color")
-  (mu/log :default-test :pairs-test "pairs of color"))
+(mu/log
+ :http-test
+ :http-error 404
+ :more-stuff-in-the-event "should be colored like 
+                           the rest of the line")
 
-(mu/log :http-test :http-error 404)
+;; (publishers)
 
-; (publishers)
-
-;; the log function seems to use pr internally
