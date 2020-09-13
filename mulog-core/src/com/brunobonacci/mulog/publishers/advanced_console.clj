@@ -2,16 +2,18 @@
    (:require [com.brunobonacci.mulog.buffer :as rb]
              [clansi.core :as ansi]))
 
-(defn ansi-color
-  [value color]
-  (->> value
-       (map str)
-       (map #(ansi/style % color))
-       ))
+(defn colorize 
+  [thing color]
+  (ansi/style thing color))
 
-(defn colorize
+(defn colorize-item
   [item color]
-  (ansi-color item color))
+  (reduce-kv (fn [acc k v]
+               (assoc acc
+                      (colorize k color)
+                      (colorize v color)))
+             {}
+             item))
 
 (def formatters
   (atom {}))
@@ -33,18 +35,36 @@
   [rules entry]
   (mapcat (partial find-format rules) entry))
 
-(defn entry-format
-  [entry rules]
-  (->> entry
-       (find-all-formats rules)
+(defn extract-format
+  [format-type formats]
+  (->> formats
        (keep
         (fn [fmt]
-          (let [rule-extractor (-> fmt vals first)
-                rule-fmt (@formatters rule-extractor)]
-            (:event rule-fmt))))
-       (into [])
+          (let [rule-format-key (-> fmt vals first)]
+            (case format-type
+              :pair (hash-map (-> fmt keys first)
+                              (get-in @formatters [rule-format-key]))
+              :event (get-in @formatters [rule-format-key format-type])
+              (throw (Exception. "Format type not supported"))))))
+       (into [])))
+ 
+(defn format-for
+  [entry rules format-type]
+  (->> entry
+       (find-all-formats rules)
+       (extract-format format-type)))
+
+(defn entry-format
+  [entry rules]
+  (->> (format-for entry rules :event)
        (cons (get-in @formatters [:default-formatter :event]))
        last))
+
+(defn pair-formats
+  [entry rules]
+  (->> (format-for entry rules :pair)
+       (filter #(:pair (-> % vals first)))
+       (apply merge)))
 
 (deftype AdvancedConsolePublisher
          [config buffer]
@@ -58,8 +78,15 @@
   (publish [_ buffer]
     (doseq [item (map second (rb/items buffer))
             :let [rules (:format config)
-                  event-fmt (entry-format item rules)]]
-      (println (apply conj (colorize item event-fmt))))
+                  event-fmt (entry-format item rules)
+                  pair-formats (pair-formats item rules)
+                  pair-keys (keys pair-formats)
+                  event-without-pair-fmt (apply dissoc item pair-keys)
+                  event-pairs (select-keys item pair-keys)]]
+      ;; (println "colorize" item "with" event-fmt)
+      (println (colorize event-without-pair-fmt event-fmt))
+      (println pair-formats)
+      )
     (flush)
     (rb/clear buffer)))
 
