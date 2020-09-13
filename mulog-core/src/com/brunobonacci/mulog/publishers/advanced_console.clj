@@ -79,9 +79,18 @@
 
   (publish [_ buffer]
     (doseq [item (map second (rb/items buffer))
-            :let [matching-formatters (-> (:format config)
-                                          (collect-formatting-matchers item))]]
-      (println "got formatters: " matching-formatters))
+            :let [rules (:format config)
+                  event-fmt (entry-format item rules)
+                  pair-formats (pair-formats item rules)
+                  pair-keys (keys pair-formats)
+                  event-without-pair-fmt (apply dissoc item pair-keys)
+                  event-pairs (select-keys item pair-keys)]]
+      (println (->> event-pairs
+                    (map (fn [[k v]]
+                           (colorize-item (hash-map k v)
+                                          (get-in pair-formats [k :pair]))))
+                    (apply merge 
+                           (colorize-item event-without-pair-fmt event-fmt)))))
     (flush)
     (rb/clear buffer)))
 

@@ -33,8 +33,7 @@
 (mu/log
  :http-test
  :http-error 404
- :more-stuff-in-the-event "should be colored like 
-                           the rest of the line")
+ :more-stuff-in-the-event "like the rest of the line")
 
 ;; (publishers)
 
