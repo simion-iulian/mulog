@@ -23,7 +23,7 @@
                  {:type :advanced-console
                   :format format-rules}))
 
-#_(do
+(do
   (mu/log :line-test :whole-line-test "whole line should be colored")
   (mu/log :http-test :whole-line-but-different "whole line should be colored but in a different way")
   (mu/log :default-test :defaults "this should use the default"))
@@ -31,8 +31,7 @@
 (mu/log
  :http-test
  :http-error 404
- :more-stuff-in-the-event "should be colored like 
-                           the rest of the line")
+ :more-stuff-in-the-event "like the rest of the line")
 
 ;; (publishers)
 
