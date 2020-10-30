@@ -2,7 +2,6 @@
   (:require [com.brunobonacci.mulog :as mu]
             [where.core :refer [where]]
             [com.brunobonacci.mulog.publishers.advanced-console :as advanced-console]))
-
 (def format-rules
   [(where :mulog/event-name :is? :line-test)
    {:line-test :event-format}
@@ -11,14 +10,13 @@
    {:http-test :http-format}
 
    (where contains? :http-error)
-   {:http-error :http-error-format}
-   
-   :default-formatter [:magenta :underline]])
+   {:http-error :http-error-format}])
 
 (advanced-console/register-formatters
  {:event-format      {:event :green}
   :http-format       {:event :yellow}
-  :http-error-format {:pair :cyan}})
+  :http-error-format {:pair :cyan}
+  :default-formatter {:event :magenta}})
 
 (def publishers
   (mu/start-publisher!
