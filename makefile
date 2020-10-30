@@ -71,7 +71,7 @@ prep: clean ancient format build
 # Build
 #
 MULOG_MODULES := build-core build-json build-jvm-metrics build-filesystem-metrics
-MULOG_MODULES += build-adv-console build-cloudwatch build-els build-kafka build-kinesis build-prometheus
+MULOG_MODULES += build-adv-console build-advanced-console build-cloudwatch build-els build-kafka build-kinesis build-prometheus
 MULOG_MODULES += build-slack build-zipkin build-examples
 build: $(MULOG_MODULES)
 - @printf "#\n# Building μ/log Completed!\n#\n"
@@ -135,6 +135,15 @@ build-adv-console: build-core build-json mulog-adv-console/target/mulog*.jar
 mulog-adv-console/target/mulog*.jar: $(adv_console_src)
 - @printf "#\n# Building mulog-adv-console\n#\n"
 - (cd mulog-adv-console; lein do check, test, install)
+
+#
+# Build advanced-console
+#
+adv_console_src = $(shell find mulog-advanced-console/project.clj mulog-advanced-console/src mulog-advanced-console/resources -type f)
+build-advanced-console: build-core build-json mulog-advanced-console/target/mulog*.jar
+mulog-advanced-console/target/mulog*.jar: $(adv_console_src)
+- @printf "#\n# Building mulog-advanced-console\n#\n"
+- (cd mulog-advanced-console; lein do check, test, install)
 
 
 #

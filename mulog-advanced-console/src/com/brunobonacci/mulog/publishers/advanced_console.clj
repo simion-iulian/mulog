@@ -1,6 +1,6 @@
  (ns com.brunobonacci.mulog.publishers.advanced-console
    (:require [com.brunobonacci.mulog.buffer :as rb]
-             [clansi.core :as ansi]))
+             [com.brunobonacci.mulog.publishers.helper.clansi :as ansi]))
 
 (defn colorize
   [thing color]

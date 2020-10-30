@@ -1,4 +1,4 @@
-(ns clansi.core)
+(ns com.brunobonacci.mulog.publishers.helper.clansi)
 
 (def ANSI-CODES
   {:reset              "[0m"
