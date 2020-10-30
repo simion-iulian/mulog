@@ -1,4 +1,4 @@
-(ns advanced-console-test
+(ns advanced-console-example.core
   (:require [com.brunobonacci.mulog :as mu]
             [where.core :refer [where]]
             [com.brunobonacci.mulog.publishers.advanced-console :as advanced-console]))
@@ -20,8 +20,8 @@
 
 (def publishers
   (mu/start-publisher!
-                 {:type :advanced-console
-                  :format format-rules}))
+   {:type :advanced-console
+    :format format-rules}))
 
 (do
   (mu/log :line-test :whole-line-test "whole line should be colored")
